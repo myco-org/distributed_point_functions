@@ -84,6 +84,13 @@ DenseDpfPirDatabase::Builder& DenseDpfPirDatabase::Builder::Insert(
   return *this;
 }
 
+DenseDpfPirDatabase::Builder& DenseDpfPirDatabase::Builder::Write(
+    std::string value, int64_t index) {
+  total_database_bytes_ += AlignBytes(value.size()) - AlignBytes(values_[index].size());
+  values_[index] = std::move(value);
+  return *this;
+}
+
 DenseDpfPirDatabase::Builder& DenseDpfPirDatabase::Builder::Clear() {
   values_.clear();
   total_database_bytes_ = 0;
@@ -93,7 +100,6 @@ DenseDpfPirDatabase::Builder& DenseDpfPirDatabase::Builder::Clear() {
 
 absl::StatusOr<std::unique_ptr<DenseDpfPirDatabase::Interface>>
 DenseDpfPirDatabase::Builder::Build() {
-  DPF_RETURN_IF_ERROR(CheckHasNotBeenBuilt(has_been_built_));
   has_been_built_ = true;
   auto database = absl::WrapUnique(
       new DenseDpfPirDatabase(values_.size(), total_database_bytes_));
