@@ -214,6 +214,21 @@ TEST_F(DenseDpfPirDatabaseBuilderInsertTest, ContentViewRebuiltSucceeds) {
   }
 }
 
+TEST_F(DenseDpfPirDatabaseBuilderInsertTest, WriteMethod) {
+  DenseDpfPirDatabase::Builder builder;
+  
+  // Insert two values
+  builder.Insert("original_value_1");
+  builder.Insert("original_value_2");
+  
+  // Write a new value at index 0
+  builder.Write("new_value", 0);
+  
+  // Build database and verify the write worked
+  DPF_ASSERT_OK_AND_ASSIGN(InterfacePtr database, builder.Build());
+  EXPECT_THAT(database, IsContentEqual({"new_value", "original_value_2"}));
+}
+
 TEST_F(DenseDpfPirDatabaseBuilderInsertTest,
        AppendLongerValueThanMaxValueSize) {
   DenseDpfPirDatabase::Builder builder;
