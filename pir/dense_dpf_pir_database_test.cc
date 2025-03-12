@@ -139,26 +139,6 @@ class DenseDpfPirDatabaseBuilderInsertTest : public ::testing::Test {
   std::vector<int> rebuild_content_view_test_cases_;
 };
 
-TEST_F(DenseDpfPirDatabaseBuilderInsertTest, BuildFailsIfAlreadyBuilt) {
-  DenseDpfPirDatabase::Builder builder;
-  DPF_EXPECT_OK(builder.Build());
-  EXPECT_THAT(builder.Build(), StatusIs(absl::StatusCode::kFailedPrecondition,
-                                        HasSubstr("already built")));
-  EXPECT_THAT(builder.Clone()->Build(),
-              StatusIs(absl::StatusCode::kFailedPrecondition,
-                       HasSubstr("already built")));
-}
-
-TEST_F(DenseDpfPirDatabaseBuilderInsertTest, CanBuildAgainAfterCallingClear) {
-  DenseDpfPirDatabase::Builder builder;
-  DPF_EXPECT_OK(builder.Build());
-  EXPECT_THAT(builder.Build(), StatusIs(absl::StatusCode::kFailedPrecondition,
-                                        HasSubstr("already built")));
-
-  builder.Clear();
-  EXPECT_THAT(builder.Build(), IsOkAndHolds(NotNull()));
-}
-
 // Values can be correctly inserted to the database.
 TEST_F(DenseDpfPirDatabaseBuilderInsertTest,
        AppendWithEmptyDatabaseBufferSucceeds) {

@@ -70,7 +70,6 @@ class DenseDpfPirDatabase
    private:
     std::vector<std::string> values_;
     int64_t total_database_bytes_;
-    bool has_been_built_;
   };
 
   // Returns the number of records contained in the database.
