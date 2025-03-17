@@ -139,6 +139,50 @@ class DenseDpfPirDatabaseBuilderInsertTest : public ::testing::Test {
   std::vector<int> rebuild_content_view_test_cases_;
 };
 
+TEST_F(DenseDpfPirDatabaseBuilderInsertTest, UpdateEntry) {
+  // Build a database with two values
+  DenseDpfPirDatabase::Builder builder;
+  builder.Insert("original_value_1");
+  builder.Insert("original_value_2");
+  DPF_ASSERT_OK_AND_ASSIGN(InterfacePtr database, builder.Build());
+  auto* dense_database = static_cast<DenseDpfPirDatabase*>(database.get());
+  
+  // Update value at index 0
+  DPF_ASSERT_OK(dense_database->UpdateEntry(0, "new_value"));
+  
+  // Verify the update worked
+  EXPECT_THAT(database, IsContentEqual({"new_value", "original_value_2"}));
+}
+
+TEST_F(DenseDpfPirDatabaseBuilderInsertTest, BatchUpdateEntry) {
+  // Build a database with several values
+  DenseDpfPirDatabase::Builder builder;
+  builder.Insert("original_value_1");
+  builder.Insert("original_value_2");
+  builder.Insert("original_value_3");
+  builder.Insert("original_value_4");
+  DPF_ASSERT_OK_AND_ASSIGN(InterfacePtr database, builder.Build());
+  auto* dense_database = static_cast<DenseDpfPirDatabase*>(database.get());
+  
+  // Update multiple values using BatchUpdateEntry
+  std::vector<size_t> indices = {0, 2, 3};
+  std::vector<std::string> new_values = {
+    "new_value_1",
+    "new_value_3",
+    "new_short"
+  };
+  
+  DPF_ASSERT_OK(dense_database->BatchUpdateEntry(indices, new_values));
+  
+  // Verify all updates worked correctly
+  EXPECT_THAT(database, IsContentEqual({
+    "new_value_1",
+    "original_value_2",
+    "new_value_3",
+    "new_short"
+  }));
+}
+
 // Values can be correctly inserted to the database.
 TEST_F(DenseDpfPirDatabaseBuilderInsertTest,
        AppendWithEmptyDatabaseBufferSucceeds) {
@@ -192,21 +236,6 @@ TEST_F(DenseDpfPirDatabaseBuilderInsertTest, ContentViewRebuiltSucceeds) {
     builder.Insert(values.back());
     EXPECT_THAT(builder.Clone()->Build(), IsOkAndHolds(IsContentEqual(values)));
   }
-}
-
-TEST_F(DenseDpfPirDatabaseBuilderInsertTest, WriteMethod) {
-  DenseDpfPirDatabase::Builder builder;
-  
-  // Insert two values
-  builder.Insert("original_value_1");
-  builder.Insert("original_value_2");
-  
-  // Write a new value at index 0
-  builder.Write("new_value", 0);
-  
-  // Build database and verify the write worked
-  DPF_ASSERT_OK_AND_ASSIGN(InterfacePtr database, builder.Build());
-  EXPECT_THAT(database, IsContentEqual({"new_value", "original_value_2"}));
 }
 
 TEST_F(DenseDpfPirDatabaseBuilderInsertTest,

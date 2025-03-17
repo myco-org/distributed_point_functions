@@ -54,7 +54,6 @@ class DenseDpfPirDatabase
     // Appends a record `value` at the end of the database.
     Builder& Insert(std::string) override;
 
-    Builder& Write(std::string, int64_t index);
     // Clears all elements inserted into this builder, but leaves any other
     // configuration intact.
     Builder& Clear() override;
@@ -70,7 +69,10 @@ class DenseDpfPirDatabase
    private:
     std::vector<std::string> values_;
     int64_t total_database_bytes_;
+    bool has_been_built_;
   };
+  // Constructs a DenseDpfPirDatabase object.
+  DenseDpfPirDatabase(int64_t num_values, int64_t total_database_bytes);
 
   // Returns the number of records contained in the database.
   size_t size() const override { return content_views_.size(); }
@@ -90,15 +92,16 @@ class DenseDpfPirDatabase
   // Returns the maximal size of values in the database. Used for testing.
   size_t max_value_size_in_bytes() const { return max_value_size_; }
 
- private:
-  static constexpr int kBitsPerBlock = 8 * sizeof(absl::uint128);
-
-  // Constructs a DenseDpfPirDatabase object.
-  DenseDpfPirDatabase(int64_t num_values, int64_t total_database_bytes);
-
   // Appends a record `value` at the current end of the database. Used by
   // Builder::Build() to construct the database.
   absl::Status Append(std::string value);
+
+  absl::Status UpdateEntry(size_t index, std::string new_value);
+
+  absl::Status BatchUpdateEntry(const std::vector<size_t>& indices, const std::vector<std::string>& new_values);
+
+ private:
+  static constexpr int kBitsPerBlock = 8 * sizeof(absl::uint128);
 
   // Maximal size (in bytes) of values in the database
   size_t max_value_size_;
